@@ -21,6 +21,8 @@ export const voices = {
   female: { casual: "ZIlrSGI4jZqobxRKprJz", formal: "sarah" },
 };
 
+export const speakingStyles = ["casual", "formal"];
+
 export const recentSessions = [
   {
     id: "1",
