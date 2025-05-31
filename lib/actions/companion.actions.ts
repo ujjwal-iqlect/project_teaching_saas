@@ -111,9 +111,26 @@ export const getUserSessions = async (userId: string, limit = 10) => {
   if (error || !data) {
     throw new Error(
       error?.message ||
-        "Failed to fetch the recent sessions for the user" + userId,
+        "Failed to fetch the recent sessions for the user " + userId,
     );
   }
 
   return data?.map(({ companions }) => companions);
+};
+
+export const getUserCompanions = async (userId: string) => {
+  const supabase = createSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("companions")
+    .select()
+    .eq("author", userId);
+
+  if (error || !data) {
+    throw new Error(
+      error?.message || "Failed to fetch the companions for the user " + userId,
+    );
+  }
+
+  return data;
 };
