@@ -4,7 +4,6 @@ import Image from "next/image";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -37,13 +36,16 @@ export default function CompanionList({
         </TableHeader>
         <TableBody>
           {companions?.map(
-            ({ id, name, topic, subject, duration }: Companion) => (
-              <TableRow key={id}>
+            (
+              { id, name, topic, subject, duration }: Companion,
+              index: number,
+            ) => (
+              <TableRow key={index}>
                 <TableCell>
                   <Link href={`/companions/${id}`}>
                     <div className="flex items-center gap-2">
                       <div
-                        className="size-[72px] flex items-center justify-center rounded-lg max-md:hidden"
+                        className="size-[72px] shrink-0 flex items-center justify-center rounded-lg max-md:hidden"
                         style={{
                           backgroundColor: getSubjectColor(subject),
                         }}
@@ -57,7 +59,9 @@ export default function CompanionList({
                       </div>
                       <div className="flex flex-col gap-2">
                         <p className="font-bold text-2xl">{name}</p>
-                        <p className="text-lg">Topic: {topic}</p>
+                        <p className="text-lg whitespace-pre-wrap">
+                          Topic: {topic}
+                        </p>
                       </div>
                     </div>
                   </Link>

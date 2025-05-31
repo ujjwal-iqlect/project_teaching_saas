@@ -8,6 +8,7 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 
 import { cn, configureAssistant, getSubjectColor } from "@/lib/utils";
 import soundWaves from "@/constants/soundwaves.json";
+import { addCompanionToSessionHistory } from "@/lib/actions/companion.actions";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -19,7 +20,7 @@ enum CallStatus {
 export default function CompanionComponent({
   userName,
   userImage,
-  // companionId,
+  companionId,
   name,
   subject,
   topic,
@@ -45,7 +46,10 @@ export default function CompanionComponent({
 
   const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
 
-  const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+  const onCallEnd = () => {
+    setCallStatus(CallStatus.FINISHED);
+    addCompanionToSessionHistory(companionId);
+  };
 
   const onMessage = (message: Message) => {
     if (message?.type === "transcript" && message?.transcriptType === "final") {
@@ -167,7 +171,10 @@ export default function CompanionComponent({
           </div>
 
           <button
-            className="btn-mic"
+            className={cn(
+              "btn-mic transition-colors duration-1000",
+              isMuted ? "bg-red-200" : "bg-green-200",
+            )}
             onClick={toggleMicrophone}
             disabled={callStatus !== CallStatus.ACTIVE}
           >

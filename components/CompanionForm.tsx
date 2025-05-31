@@ -35,8 +35,8 @@ const formSchema = z.object({
   subject: z.string().min(1, { message: "Subject is required." }),
   topic: z
     .string()
-    .min(8, { message: "Topic should be at least 4 chars long." })
-    .max(50, { message: "Topic can not be longer than 50 chars." }),
+    .min(8, { message: "Topic should be at least 4 chars long." }),
+  // .max(50, { message: "Topic can not be longer than 50 chars." }),
   voice: z.string().min(1, { message: "Voice is required." }),
   style: z.string().min(1, { message: "Style is required." }),
   duration: z.coerce.number().min(1, { message: "Duration is required." }),
