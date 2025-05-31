@@ -134,3 +134,39 @@ export const getUserCompanions = async (userId: string) => {
 
   return data;
 };
+
+export const newCompanionPermissions = async () => {
+  const { userId, has } = await auth();
+  const supabase = createSupabaseClient();
+
+  const hasCorePlan = has({ plan: "core" });
+  const hasProPlan = has({ plan: "pro" });
+
+  let limit = 3; // Limit is 3 in the basic plan
+
+  if (hasProPlan) {
+    return true;
+  } else if (hasCorePlan) {
+    limit = 10;
+  }
+
+  const { data, error } = await supabase
+    .from("companions")
+    .select("id", { count: "exact" })
+    .eq("author", userId);
+
+  if (error) {
+    throw new Error(
+      error?.message ||
+        "Failed to fetch the companion data for the user " + userId,
+    );
+  }
+
+  const companionCount = data?.length || 0;
+
+  if (companionCount >= limit) {
+    return false;
+  } else {
+    return true;
+  }
+};
