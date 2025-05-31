@@ -5,6 +5,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getCompanion } from "@/lib/actions/companion.actions";
 import { getSubjectColor } from "@/lib/utils";
 
+import CompanionComponent from "@/components/CompanionComponent";
+
 interface CompanionSessionPageProps {
   params: Promise<{ id: string }>;
 }
@@ -51,6 +53,13 @@ export default async function CompanionSession({
           {duration} minutes
         </div>
       </article>
+
+      <CompanionComponent
+        {...companion}
+        companionId={id}
+        userName={user.firstName!}
+        userImage={user.imageUrl!}
+      />
     </main>
   );
 }
