@@ -7,8 +7,11 @@ import { useState } from "react";
 
 import {
   addCompanionToBookmark,
+  // companionBookmarkPermissions,
   removeCompanionFromBookmark,
 } from "@/lib/actions/companion.actions";
+import { usePathname } from "next/navigation";
+import { Protect } from "@clerk/nextjs";
 
 interface CompanionCardProps {
   id: string;
@@ -29,19 +32,18 @@ export default function CompanionCard({
   color,
   bookmarked,
 }: CompanionCardProps) {
+  const pathname = usePathname();
+
   const [isBookmarking, setIsBookmarking] = useState<boolean>(false);
-  const [isBookmarked, setIsBookmarked] = useState<boolean>(bookmarked);
 
   const handleBookmark = async () => {
     try {
       setIsBookmarking(true);
 
-      if (isBookmarked) {
-        await removeCompanionFromBookmark(id);
-        setIsBookmarked(false);
+      if (bookmarked) {
+        await removeCompanionFromBookmark(id, pathname);
       } else {
-        await addCompanionToBookmark(id);
-        setIsBookmarked(true);
+        await addCompanionToBookmark(id, pathname);
       }
     } catch (error) {
       console.log(error);
@@ -59,22 +61,26 @@ export default function CompanionCard({
     >
       <div className="flex justify-between items-center">
         <div className="subject-badge">{subject}</div>
-        <button
-          className="companion-bookmark"
-          onClick={handleBookmark}
-          disabled={isBookmarking}
+        <Protect
+          condition={(has) => has({ plan: "core" }) || has({ plan: "pro" })}
         >
-          <Image
-            src={
-              isBookmarked
-                ? "/icons/bookmark-filled.svg"
-                : "/icons/bookmark.svg"
-            }
-            alt="bookmark"
-            width={12.5}
-            height={15}
-          />
-        </button>
+          <button
+            className="companion-bookmark"
+            onClick={handleBookmark}
+            disabled={isBookmarking}
+          >
+            <Image
+              src={
+                bookmarked
+                  ? "/icons/bookmark-filled.svg"
+                  : "/icons/bookmark.svg"
+              }
+              alt="bookmark"
+              width={12.5}
+              height={15}
+            />
+          </button>
+        </Protect>
       </div>
 
       <h2 className="text-2xl font-bold">{name}</h2>

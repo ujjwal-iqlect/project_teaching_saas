@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@clerk/nextjs/server";
@@ -6,7 +7,6 @@ import { auth } from "@clerk/nextjs/server";
 import CompanionForm from "@/components/CompanionForm";
 
 import { newCompanionPermissions } from "@/lib/actions/companion.actions";
-import Link from "next/link";
 
 export default async function NewCompanion() {
   const { userId } = await auth();

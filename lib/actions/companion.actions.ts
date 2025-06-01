@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { createSupabaseClient } from "@/lib/supabase";
+import { revalidatePath } from "next/cache";
 
 export const createCompanion = async (formData: CreateCompanion) => {
   const { userId: author } = await auth();
@@ -48,28 +49,46 @@ export const getAllCompanions = async ({
     throw new Error(error?.message || "Failed to fetch the companions");
   }
 
-  const companionsWithDetails =
-    (await Promise.all(
-      companions?.map(async (companion) => {
-        let bookmarked = false;
+  const companionIds = companions?.map(({ id }) => id);
 
-        const { data, error } = await supabase
-          .from("bookmarks")
-          .select()
-          .eq("companion_id", companion?.id)
-          .eq("user_id", userId);
+  const { data: bookmarks } = await supabase
+    .from("bookmarks")
+    .select()
+    .eq("user_id", userId)
+    .in("companion_id", companionIds);
 
-        if (error || !data) {
-          bookmarked = false;
-        } else if (data?.length) {
-          bookmarked = true;
-        }
+  const marks = new Set(bookmarks?.map(({ companion_id }) => companion_id));
 
-        return { ...(companion || {}), bookmarked };
-      }),
-    )) || [];
+  // Add a bookmarked property to each companion
 
-  return companionsWithDetails;
+  companions.forEach((companion) => {
+    companion.bookmarked = marks.has(companion.id);
+  });
+
+  return companions;
+
+  // const companionsWithDetails =
+  //   (await Promise.all(
+  //     companions?.map(async (companion) => {
+  //       let bookmarked = false;
+  //
+  //       const { data, error } = await supabase
+  //         .from("bookmarks")
+  //         .select()
+  //         .eq("companion_id", companion?.id)
+  //         .eq("user_id", userId);
+  //
+  //       if (error || !data) {
+  //         bookmarked = false;
+  //       } else if (data?.length) {
+  //         bookmarked = true;
+  //       }
+  //
+  //       return { ...(companion || {}), bookmarked };
+  //     }),
+  //   )) || [];
+  //
+  // return companionsWithDetails;
 };
 
 export const getCompanion = async (id: string) => {
@@ -193,8 +212,13 @@ export const newCompanionPermissions = async () => {
   }
 };
 
-export const addCompanionToBookmark = async (companionId: string) => {
+export const addCompanionToBookmark = async (
+  companionId: string,
+  path: string,
+) => {
   const { userId } = await auth();
+  if (!userId) return;
+
   const supabase = createSupabaseClient();
 
   const { error } = await supabase
@@ -204,10 +228,17 @@ export const addCompanionToBookmark = async (companionId: string) => {
   if (error) {
     throw new Error(error?.message || "Failed to bookmark the companion");
   }
+
+  revalidatePath(path);
 };
 
-export const removeCompanionFromBookmark = async (companionId: string) => {
+export const removeCompanionFromBookmark = async (
+  companionId: string,
+  path: string,
+) => {
   const { userId } = await auth();
+  if (!userId) return;
+
   const supabase = createSupabaseClient();
 
   const response = await supabase
@@ -219,6 +250,8 @@ export const removeCompanionFromBookmark = async (companionId: string) => {
   if (!response?.status) {
     throw new Error("Failed to remove the companion from bookmarks");
   }
+
+  revalidatePath(path);
 };
 
 export const getBookmarkedCompanions = async (userId: string) => {
@@ -240,3 +273,16 @@ export const getBookmarkedCompanions = async (userId: string) => {
 
   return data?.map(({ companions }) => companions);
 };
+
+// export const companionBookmarkPermissions = async () => {
+//   const { has } = await auth();
+//
+//   const hasCorePlan = has({ plan: "core" });
+//   const hasProPlan = has({ plan: "pro" });
+//
+//   if (hasProPlan || hasCorePlan) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// };

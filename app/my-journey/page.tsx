@@ -15,6 +15,7 @@ import {
   getUserSessions,
 } from "@/lib/actions/companion.actions";
 import CompanionList from "@/components/CompanionList";
+import { Protect } from "@clerk/nextjs";
 
 export default async function Profile() {
   const user = await currentUser();
@@ -98,14 +99,18 @@ export default async function Profile() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="bookmarks">
-          <AccordionTrigger className="text-2xl font-bold cursor-pointer">
-            Bookmarks {`(${bookmarks?.length})`}
-          </AccordionTrigger>
-          <AccordionContent>
-            <CompanionList title="Bookmarks" companions={bookmarks} />
-          </AccordionContent>
-        </AccordionItem>
+        <Protect
+          condition={(has) => has({ plan: "core" }) || has({ plan: "pro" })}
+        >
+          <AccordionItem value="bookmarks">
+            <AccordionTrigger className="text-2xl font-bold cursor-pointer">
+              Bookmarks {`(${bookmarks?.length})`}
+            </AccordionTrigger>
+            <AccordionContent>
+              <CompanionList title="Bookmarks" companions={bookmarks} />
+            </AccordionContent>
+          </AccordionItem>
+        </Protect>
       </Accordion>
     </main>
   );
