@@ -26,6 +26,7 @@ export const getAllCompanions = async ({
   topic,
 }: GetAllCompanions) => {
   const supabase = createSupabaseClient();
+  const { userId } = await auth();
 
   let query = supabase.from("companions").select();
 
@@ -47,7 +48,28 @@ export const getAllCompanions = async ({
     throw new Error(error?.message || "Failed to fetch the companions");
   }
 
-  return companions;
+  const companionsWithDetails =
+    (await Promise.all(
+      companions?.map(async (companion) => {
+        let bookmarked = false;
+
+        const { data, error } = await supabase
+          .from("bookmarks")
+          .select()
+          .eq("companion_id", companion?.id)
+          .eq("user_id", userId);
+
+        if (error || !data) {
+          bookmarked = false;
+        } else if (data?.length) {
+          bookmarked = true;
+        }
+
+        return { ...(companion || {}), bookmarked };
+      }),
+    )) || [];
+
+  return companionsWithDetails;
 };
 
 export const getCompanion = async (id: string) => {
@@ -169,4 +191,52 @@ export const newCompanionPermissions = async () => {
   } else {
     return true;
   }
+};
+
+export const addCompanionToBookmark = async (companionId: string) => {
+  const { userId } = await auth();
+  const supabase = createSupabaseClient();
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .insert({ companion_id: companionId, user_id: userId });
+
+  if (error) {
+    throw new Error(error?.message || "Failed to bookmark the companion");
+  }
+};
+
+export const removeCompanionFromBookmark = async (companionId: string) => {
+  const { userId } = await auth();
+  const supabase = createSupabaseClient();
+
+  const response = await supabase
+    .from("bookmarks")
+    .delete()
+    .eq("companion_id", companionId)
+    .eq("user_id", userId);
+
+  if (!response?.status) {
+    throw new Error("Failed to remove the companion from bookmarks");
+  }
+};
+
+export const getBookmarkedCompanions = async (userId: string) => {
+  const supabase = createSupabaseClient();
+
+  const query = supabase
+    .from("bookmarks")
+    .select(`companions:companion_id (*)`)
+    .eq("user_id", userId);
+
+  const { data, error } = await query;
+
+  if (error || !data) {
+    throw new Error(
+      error?.message ||
+        "Failed to fetch the bookmarked companions for the user " + userId,
+    );
+  }
+
+  return data?.map(({ companions }) => companions);
 };

@@ -10,6 +10,7 @@ import {
 
 import { currentUser } from "@clerk/nextjs/server";
 import {
+  getBookmarkedCompanions,
   getUserCompanions,
   getUserSessions,
 } from "@/lib/actions/companion.actions";
@@ -22,6 +23,7 @@ export default async function Profile() {
 
   const companions = await getUserCompanions(user?.id);
   const sessionHistory = await getUserSessions(user?.id);
+  const bookmarks = await getBookmarkedCompanions(user?.id);
 
   return (
     <main className="min-lg:w-3/4">
@@ -93,6 +95,15 @@ export default async function Profile() {
           </AccordionTrigger>
           <AccordionContent>
             <CompanionList title="My Companions" companions={companions} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="bookmarks">
+          <AccordionTrigger className="text-2xl font-bold cursor-pointer">
+            Bookmarks {`(${bookmarks?.length})`}
+          </AccordionTrigger>
+          <AccordionContent>
+            <CompanionList title="Bookmarks" companions={bookmarks} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

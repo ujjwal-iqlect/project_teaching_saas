@@ -1,5 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+
+import { useState } from "react";
+
+import {
+  addCompanionToBookmark,
+  removeCompanionFromBookmark,
+} from "@/lib/actions/companion.actions";
 
 interface CompanionCardProps {
   id: string;
@@ -8,6 +17,7 @@ interface CompanionCardProps {
   subject: string;
   duration: number;
   color: string;
+  bookmarked: boolean;
 }
 
 export default function CompanionCard({
@@ -17,7 +27,29 @@ export default function CompanionCard({
   subject,
   duration,
   color,
+  bookmarked,
 }: CompanionCardProps) {
+  const [isBookmarking, setIsBookmarking] = useState<boolean>(false);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(bookmarked);
+
+  const handleBookmark = async () => {
+    try {
+      setIsBookmarking(true);
+
+      if (isBookmarked) {
+        await removeCompanionFromBookmark(id);
+        setIsBookmarked(false);
+      } else {
+        await addCompanionToBookmark(id);
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
+
   return (
     <article
       className="companion-card"
@@ -27,9 +59,17 @@ export default function CompanionCard({
     >
       <div className="flex justify-between items-center">
         <div className="subject-badge">{subject}</div>
-        <button className="companion-bookmark">
+        <button
+          className="companion-bookmark"
+          onClick={handleBookmark}
+          disabled={isBookmarking}
+        >
           <Image
-            src="/icons/bookmark.svg"
+            src={
+              isBookmarked
+                ? "/icons/bookmark-filled.svg"
+                : "/icons/bookmark.svg"
+            }
             alt="bookmark"
             width={12.5}
             height={15}
